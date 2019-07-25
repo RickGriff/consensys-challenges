@@ -41,7 +41,7 @@ contract EventTickets {
     event LogBuyTickets(address purchaser, uint tickets);
     event LogGetRefund(address requester, uint tickets);
     event LogEndSale(address owner, uint balance);
-
+    
     /*
         Create a modifier that throws an error if the msg.sender is not the owner.
     */
@@ -64,7 +64,6 @@ contract EventTickets {
         myEvent.totalTickets = _totalTickets;
         myEvent.isOpen = true;
     }
-
     /*
         Define a function called readEvent() that returns the event details.
         This function does not modify state, add the appropriate keyword.
@@ -110,9 +109,9 @@ contract EventTickets {
             - emit the appropriate event
     */
     function buyTickets(uint _ticketsToBuy) public payable {
-        address purchaser = msg.sender;
+        address payable purchaser = msg.sender;
         uint costOfTickets = TICKET_PRICE * _ticketsToBuy;
-        require(myEvent.isOpen == true, "You may not buy tickets - the event is closed");
+        require(myEvent.isOpen, "You may not buy tickets - the event is closed");
         require(msg.value >= costOfTickets, "Funds sent do not cover the cost of the tickets" );
         require(myEvent.totalTickets >= _ticketsToBuy, "Not enough tickets left to fill this order!");
 
@@ -121,8 +120,8 @@ contract EventTickets {
         myEvent.sales += _ticketsToBuy;
         
         uint remainder = msg.value - costOfTickets;
-        msg.sender.transfer(remainder);
-        emit LogBuyTickets(msg.sender, _ticketsToBuy);
+        purchaser.transfer(remainder);
+        emit LogBuyTickets(purchaser, _ticketsToBuy);
     }
 
     /*
@@ -135,7 +134,7 @@ contract EventTickets {
             - Emit the appropriate event.
     */
     function getRefund() public {
-        address requester = msg.sender;
+        address payable requester = msg.sender;
         uint ticketsToReturn = myEvent.buyers[requester];
 
         require(ticketsToReturn != 0, "You do not have any tickets.");
@@ -145,7 +144,7 @@ contract EventTickets {
         myEvent.sales -= ticketsToReturn;
         
         uint refund = TICKET_PRICE * ticketsToReturn;
-        msg.sender.transfer(refund);
+        requester.transfer(refund);
         emit LogGetRefund(requester, ticketsToReturn);
     }
 
